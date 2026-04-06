@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ai-detector
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: SIGHTENGINE_USER
+        sync: false
+      - key: SIGHTENGINE_SECRET
+        sync: false
