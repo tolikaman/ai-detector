@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Detector</title>
+  <title>AI Detector — AI Content Detection for Instagram</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -96,41 +96,41 @@
       <div class="header">
         <div class="header-icon">🔍</div>
         <h1>AI Detector</h1>
-        <p>Определи, создан ли контент<br>в Instagram с помощью AI</p>
+        <p>Detect if Instagram content<br>was created using AI</p>
       </div>
       <div class="input-section">
-        <div class="input-label">Ссылка из Instagram</div>
+        <div class="input-label">Instagram Link</div>
         <div class="input-row">
           <input class="url-input" id="url-input" type="url" placeholder="https://instagram.com/p/..." autocomplete="off" autocapitalize="off" spellcheck="false" />
-          <button class="paste-btn" id="paste-btn" title="Вставить из буфера">📋</button>
+          <button class="paste-btn" id="paste-btn" title="Paste from clipboard">📋</button>
         </div>
         <div class="error-text" id="error-text"></div>
-        <button class="analyze-btn" id="analyze-btn"><span>🛡️</span> Проверить</button>
+        <button class="analyze-btn" id="analyze-btn"><span>🛡️</span> Analyze</button>
       </div>
       <div class="steps">
-        <h2>Как это работает</h2>
-        <div class="step"><div class="step-num">1</div><div><div class="step-title">Скопируйте ссылку</div><div class="step-desc">Откройте пост или reel в Instagram и скопируйте ссылку</div></div></div>
-        <div class="step"><div class="step-num">2</div><div><div class="step-title">Вставьте и проверьте</div><div class="step-desc">Вставьте ссылку выше и нажмите «Проверить»</div></div></div>
-        <div class="step"><div class="step-num">3</div><div><div class="step-title">Получите результат</div><div class="step-desc">AI проанализирует контент и покажет вероятность AI-генерации</div></div></div>
+        <h2>How it works</h2>
+        <div class="step"><div class="step-num">1</div><div><div class="step-title">Copy the link</div><div class="step-desc">Open a post or reel on Instagram and copy the link</div></div></div>
+        <div class="step"><div class="step-num">2</div><div><div class="step-title">Paste and analyze</div><div class="step-desc">Paste the link above and click "Analyze"</div></div></div>
+        <div class="step"><div class="step-num">3</div><div><div class="step-title">Get the result</div><div class="step-desc">AI will analyze the content and show the probability of AI generation</div></div></div>
       </div>
       <div class="formats">
-        <div class="formats-title">Поддерживаемые форматы</div>
+        <div class="formats-title">Supported formats</div>
         <div class="formats-row">
-          <span class="format-badge">📸 Фото</span>
+          <span class="format-badge">📸 Photos</span>
           <span class="format-badge">🎬 Reels</span>
-          <span class="format-badge">🎠 Карусели</span>
+          <span class="format-badge">🎠 Carousels</span>
         </div>
       </div>
     </div>
     <div class="loading-screen" id="loading-view">
-      <button class="new-analysis-btn" id="back-btn-loading" style="margin-bottom:20px;">← Назад</button>
+      <button class="new-analysis-btn" id="back-btn-loading" style="margin-bottom:20px;">← Back</button>
       <div class="preview-box" id="preview-box"><img id="preview-img" src="" alt="" /><div class="scan-overlay"><div class="scan-line"></div></div></div>
-      <div class="loading-text" id="loading-text">Загрузка поста из Instagram...</div>
+      <div class="loading-text" id="loading-text">Loading post from Instagram...</div>
       <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-      <div class="loading-hint">Это может занять несколько секунд</div>
+      <div class="loading-hint">This may take a few seconds</div>
     </div>
     <div class="results-screen" id="results-view">
-      <button class="new-analysis-btn" id="back-btn-results" style="margin-bottom:20px;">← Назад</button>
+      <button class="new-analysis-btn" id="back-btn-results" style="margin-bottom:20px;">← Back</button>
       <div class="preview-box" id="result-preview-box" style="margin-bottom:20px;"><img id="result-preview-img" src="" alt="" /></div>
       <div class="verdict-card" id="verdict-card">
         <div class="verdict-icon" id="verdict-icon"></div>
@@ -138,9 +138,9 @@
         <div class="verdict-confidence" id="verdict-confidence"></div>
       </div>
       <div class="meter-card">
-        <div class="meter-title">Шкала AI-генерации</div>
+        <div class="meter-title">AI Generation Scale</div>
         <div class="meter-bar"><div class="meter-fill" id="meter-fill"></div></div>
-        <div class="meter-labels"><span>Реальный</span><span>AI</span></div>
+        <div class="meter-labels"><span>Real</span><span>AI</span></div>
       </div>
       <div class="detail-card" id="sightengine-card" style="display:none;">
         <div class="detail-title">🔬 SightEngine</div>
@@ -150,23 +150,23 @@
         <div class="detail-title">🧠 Claude Vision</div>
         <div class="detail-explanation" id="claude-explanation"></div>
         <div class="artifacts-list" id="artifacts-list" style="display:none;">
-          <div class="artifacts-title">Обнаруженные артефакты:</div>
+          <div class="artifacts-title">Detected artifacts:</div>
           <div id="artifacts-items"></div>
         </div>
       </div>
       <div class="detail-card" id="post-card" style="display:none;">
-        <div class="detail-title">📝 Информация о посте</div>
+        <div class="detail-title">📝 Post Information</div>
         <div id="post-details"></div>
       </div>
-      <button class="new-analysis-btn" id="new-analysis-btn">🔍 Проверить другую ссылку</button>
+      <button class="new-analysis-btn" id="new-analysis-btn">🔍 Check another link</button>
     </div>
     <div class="error-screen" id="error-view">
       <div class="err-icon">⚠️</div>
-      <div class="err-title">Ошибка анализа</div>
+      <div class="err-title">Analysis Error</div>
       <div class="err-message" id="err-message"></div>
-      <button class="retry-btn" id="retry-btn">Попробовать снова</button>
+      <button class="retry-btn" id="retry-btn">Try again</button>
       <br><br>
-      <button class="new-analysis-btn" id="back-btn-error">← Назад</button>
+      <button class="new-analysis-btn" id="back-btn-error">← Back</button>
     </div>
   </div>
   <script>
@@ -203,36 +203,36 @@
     analyzeBtn.addEventListener('click', () => {
       const url = urlInput.value.trim();
       errorText.classList.remove('visible');
-      if (!url) { errorText.textContent = 'Вставьте ссылку на пост из Instagram'; errorText.classList.add('visible'); shake(urlInput); return; }
-      if (!INSTAGRAM_RE.test(url)) { errorText.textContent = 'Неверный формат ссылки'; errorText.classList.add('visible'); shake(urlInput); return; }
+      if (!url) { errorText.textContent = 'Paste an Instagram post link'; errorText.classList.add('visible'); shake(urlInput); return; }
+      if (!INSTAGRAM_RE.test(url)) { errorText.textContent = 'Invalid link format. Posts and reels are supported'; errorText.classList.add('visible'); shake(urlInput); return; }
       currentUrl = url; runAnalysis(url);
     });
     $('retry-btn').addEventListener('click', () => { if (currentUrl) runAnalysis(currentUrl); });
 
     async function runAnalysis(url) {
-      showView(loadingView); setProgress(5, 'Загрузка поста из Instagram...'); $('preview-img').src = '';
+      showView(loadingView); setProgress(5, 'Loading post from Instagram...'); $('preview-img').src = '';
       try {
-        setProgress(15, 'Загрузка поста из Instagram...');
+        setProgress(15, 'Loading post from Instagram...');
         const postRes = await fetch(API_BASE + '/api/instagram/post', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url, shortcode: extractShortcode(url) }),
         });
-        if (!postRes.ok) { const err = await postRes.json().catch(() => ({})); throw new Error(err.message || 'Не удалось загрузить пост'); }
+        if (!postRes.ok) { const err = await postRes.json().catch(() => ({})); throw new Error(err.message || 'Failed to load post'); }
         const post = await postRes.json();
         if (post.thumbnailUrl || post.mediaUrls?.[0]) $('preview-img').src = post.thumbnailUrl || post.mediaUrls[0];
-        setProgress(35, 'Анализ контента с помощью AI...');
+        setProgress(35, 'Analyzing content with AI...');
         const mediaUrl = post.mediaUrls?.[0];
-        if (!mediaUrl) throw new Error('Нет медиа для анализа');
+        if (!mediaUrl) throw new Error('No media to analyze');
         const analyzeRes = await fetch(API_BASE + '/api/analyze', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mediaUrl, mediaType: post.type === 'video' ? 'video' : 'image' }),
         });
-        setProgress(80, 'Формирование результата...');
-        if (!analyzeRes.ok) { const err = await analyzeRes.json().catch(() => ({})); throw new Error(err.message || 'Ошибка при анализе'); }
+        setProgress(80, 'Generating results...');
+        if (!analyzeRes.ok) { const err = await analyzeRes.json().catch(() => ({})); throw new Error(err.message || 'Analysis error'); }
         const result = await analyzeRes.json();
-        setProgress(100, 'Готово!');
+        setProgress(100, 'Done!');
         await sleep(400); renderResults(result, post);
-      } catch (err) { $('err-message').textContent = err.message || 'Произошла неизвестная ошибка'; showView(errorView); }
+      } catch (err) { $('err-message').textContent = err.message || 'An unknown error occurred'; showView(errorView); }
     }
 
     function renderResults(result, post) {
@@ -247,11 +247,11 @@
       $('verdict-icon').textContent = result.isAI ? '🤖' : '✅';
       $('verdict-label').textContent = label;
       $('verdict-label').style.color = color;
-      $('verdict-confidence').textContent = 'Уверенность: ' + result.confidence + '%';
+      $('verdict-confidence').textContent = 'Confidence: ' + result.confidence + '%';
       const fill = $('meter-fill'); fill.style.width = result.confidence + '%'; fill.style.backgroundColor = color;
       const sightengineCard = $('sightengine-card');
       if (result.sightengineScore !== undefined && result.sightengineScore !== null) {
-        $('sightengine-value').textContent = 'AI вероятность: ' + result.sightengineScore + '%'; sightengineCard.style.display = 'block';
+        $('sightengine-value').textContent = 'AI probability: ' + result.sightengineScore + '%'; sightengineCard.style.display = 'block';
       } else { sightengineCard.style.display = 'none'; }
       const claudeCard = $('claude-card');
       if (result.claudeVerdict) {
@@ -267,16 +267,16 @@
       } else { claudeCard.style.display = 'none'; }
       const postCard = $('post-card'), postDetails = $('post-details');
       postDetails.innerHTML = '';
-      if (post.username) postDetails.innerHTML += '<div class="post-info">Автор: @' + escapeHtml(post.username) + '</div>';
-      const typeLabel = post.type === 'video' ? 'Видео/Reel' : post.type === 'carousel' ? 'Карусель' : 'Фото';
-      postDetails.innerHTML += '<div class="post-info">Тип: ' + typeLabel + '</div>';
+      if (post.username) postDetails.innerHTML += '<div class="post-info">Author: @' + escapeHtml(post.username) + '</div>';
+      const typeLabel = post.type === 'video' ? 'Video/Reel' : post.type === 'carousel' ? 'Carousel' : 'Photo';
+      postDetails.innerHTML += '<div class="post-info">Type: ' + typeLabel + '</div>';
       if (post.caption) { const short = post.caption.length > 200 ? post.caption.slice(0, 200) + '…' : post.caption; postDetails.innerHTML += '<div class="post-caption">' + escapeHtml(short) + '</div>'; }
       postCard.style.display = 'block';
       showView(resultsView);
     }
 
     function extractShortcode(url) { const m = url.match(/\/(p|reel|reels)\/([\w-]+)/); return m ? m[2] : ''; }
-    function getVerdictLabel(c, ai) { if (!ai) return c >= 80 ? 'Реальный контент' : 'Скорее всего реальный'; if (c >= 90) return 'AI-генерация'; if (c >= 70) return 'Вероятно AI'; return 'Возможно AI'; }
+    function getVerdictLabel(c, ai) { if (!ai) return c >= 80 ? 'Real Content' : 'Most likely real'; if (c >= 90) return 'AI Generated'; if (c >= 70) return 'Likely AI'; return 'Possibly AI'; }
     function getVerdictColor(c, ai) { if (!ai) return 'var(--real-green)'; if (c >= 70) return 'var(--ai-red)'; return 'var(--uncertain-yellow)'; }
     function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
