@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Detector</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0F0F1A; --bg-card: #1A1A2E; --bg-card-light: #222240; --bg-input: #16162B;
+      --primary: #6C5CE7; --primary-light: #A29BFE; --primary-dark: #5A4BD1;
+      --ai-red: #FF6B6B; --ai-red-bg: rgba(255,107,107,0.12);
+      --real-green: #51CF66; --real-green-bg: rgba(81,207,102,0.12);
+      --uncertain-yellow: #FFD43B; --text: #FFFFFF;
+      --text-secondary: #8B8BA3; --text-muted: #5C5C7A;
+      --border: #2A2A45; --error: #FF6B6B;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; }
+    .app { width: 100%; max-width: 520px; padding: 48px 20px 60px; }
+    .header { text-align: center; margin-bottom: 36px; }
+    .header-icon { font-size: 52px; margin-bottom: 12px; }
+    .header h1 { font-size: 38px; font-weight: 800; letter-spacing: -1.5px; }
+    .header p { color: var(--text-secondary); font-size: 16px; line-height: 1.5; margin-top: 8px; }
+    .input-section { margin-bottom: 32px; }
+    .input-label { font-size: 14px; color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; }
+    .input-row { display: flex; gap: 8px; }
+    .url-input { flex: 1; height: 56px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 0 16px; font-size: 16px; color: var(--text); outline: none; transition: border-color 0.2s; }
+    .url-input::placeholder { color: var(--text-muted); }
+    .url-input:focus { border-color: var(--primary); }
+    .paste-btn { width: 56px; height: 56px; background: var(--bg-card-light); border: 1px solid var(--border); border-radius: 12px; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+    .paste-btn:hover { background: var(--bg-card); }
+    .error-text { color: var(--error); font-size: 13px; margin-top: 8px; display: none; }
+    .error-text.visible { display: block; }
+    .analyze-btn { width: 100%; height: 56px; background: var(--primary); border: none; border-radius: 12px; color: #fff; font-size: 20px; font-weight: 700; cursor: pointer; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: background 0.2s, opacity 0.2s; }
+    .analyze-btn:hover { background: var(--primary-dark); }
+    .analyze-btn:disabled { opacity: 0.5; cursor: default; }
+    .steps { margin-bottom: 32px; }
+    .steps h2 { font-size: 20px; font-weight: 700; margin-bottom: 14px; }
+    .step { display: flex; gap: 14px; align-items: flex-start; background: var(--bg-card); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; }
+    .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 700; font-size: 14px; display: flex; flex-shrink: 0; align-items: center; justify-content: center; }
+    .step-title { font-weight: 600; font-size: 16px; }
+    .step-desc { color: var(--text-secondary); font-size: 14px; margin-top: 2px; }
+    .formats { text-align: center; margin-bottom: 20px; }
+    .formats-title { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; }
+    .formats-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .format-badge { background: var(--bg-card); padding: 8px 16px; border-radius: 999px; font-size: 13px; color: var(--text-secondary); }
+    .loading-screen { display: none; text-align: center; padding: 40px 0; }
+    .loading-screen.visible { display: block; }
+    .preview-box { position: relative; border-radius: 16px; overflow: hidden; height: 260px; background: var(--bg-card); margin-bottom: 24px; }
+    .preview-box img { width: 100%; height: 100%; object-fit: cover; }
+    .scan-overlay { position: absolute; inset: 0; background: rgba(108,92,231,0.08); overflow: hidden; }
+    .scan-line { position: absolute; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--primary-light), transparent); box-shadow: 0 0 20px var(--primary-light); animation: scan 2s ease-in-out infinite; }
+    @keyframes scan { 0%, 100% { top: 0; } 50% { top: 100%; } }
+    .loading-text { font-size: 17px; font-weight: 600; margin-bottom: 14px; }
+    .progress-bar { height: 6px; background: var(--bg-card-light); border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.5s ease; }
+    .loading-hint { color: var(--text-muted); font-size: 14px; margin-top: 10px; }
+    .results-screen { display: none; }
+    .results-screen.visible { display: block; animation: fadeUp 0.5s ease; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .verdict-card { text-align: center; padding: 28px 20px; border-radius: 16px; border: 1px solid; margin-bottom: 16px; }
+    .verdict-icon { font-size: 52px; margin-bottom: 8px; }
+    .verdict-label { font-size: 28px; font-weight: 800; }
+    .verdict-confidence { color: var(--text-secondary); font-size: 16px; margin-top: 4px; }
+    .meter-card, .detail-card { background: var(--bg-card); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .meter-title, .detail-title { font-size: 14px; color: var(--text-secondary); font-weight: 600; margin-bottom: 10px; }
+    .detail-title { color: var(--text); font-size: 16px; font-weight: 700; }
+    .meter-bar { height: 12px; background: var(--bg-card-light); border-radius: 6px; overflow: hidden; }
+    .meter-fill { height: 100%; border-radius: 6px; transition: width 0.8s ease; }
+    .meter-labels { display: flex; justify-content: space-between; margin-top: 6px; }
+    .meter-labels span { font-size: 12px; color: var(--text-muted); }
+    .detail-value { color: var(--text-secondary); font-size: 15px; }
+    .detail-explanation { color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
+    .artifacts-list { margin-top: 14px; }
+    .artifacts-title { color: var(--text-secondary); font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .artifact-item { display: flex; gap: 8px; margin-bottom: 4px; }
+    .artifact-item .bullet { color: var(--primary-light); }
+    .artifact-item .text { color: var(--text-secondary); font-size: 14px; }
+    .post-info { color: var(--text-secondary); font-size: 14px; margin-bottom: 4px; }
+    .post-caption { color: var(--text-muted); font-size: 14px; font-style: italic; margin-top: 6px; }
+    .new-analysis-btn { width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; color: var(--primary-light); font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: background 0.2s; }
+    .new-analysis-btn:hover { background: var(--bg-card-light); }
+    .error-screen { display: none; text-align: center; padding: 40px 0; }
+    .error-screen.visible { display: block; }
+    .error-screen .err-icon { font-size: 52px; margin-bottom: 14px; }
+    .error-screen .err-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .error-screen .err-message { color: var(--text-secondary); font-size: 16px; margin-bottom: 24px; }
+    .retry-btn { background: var(--primary); border: none; border-radius: 12px; color: #fff; font-weight: 600; font-size: 16px; padding: 14px 32px; cursor: pointer; transition: background 0.2s; }
+    .retry-btn:hover { background: var(--primary-dark); }
+    @media (max-width: 400px) { .header h1 { font-size: 30px; } .verdict-label { font-size: 22px; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div id="home-view">
+      <div class="header">
+        <div class="header-icon">🔍</div>
+        <h1>AI Detector</h1>
+        <p>Определи, создан ли контент<br>в Instagram с помощью AI</p>
+      </div>
+      <div class="input-section">
+        <div class="input-label">Ссылка из Instagram</div>
+        <div class="input-row">
+          <input class="url-input" id="url-input" type="url" placeholder="https://instagram.com/p/..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <button class="paste-btn" id="paste-btn" title="Вставить из буфера">📋</button>
+        </div>
+        <div class="error-text" id="error-text"></div>
+        <button class="analyze-btn" id="analyze-btn"><span>🛡️</span> Проверить</button>
+      </div>
+      <div class="steps">
+        <h2>Как это работает</h2>
+        <div class="step"><div class="step-num">1</div><div><div class="step-title">Скопируйте ссылку</div><div class="step-desc">Откройте пост или reel в Instagram и скопируйте ссылку</div></div></div>
+        <div class="step"><div class="step-num">2</div><div><div class="step-title">Вставьте и проверьте</div><div class="step-desc">Вставьте ссылку выше и нажмите «Проверить»</div></div></div>
+        <div class="step"><div class="step-num">3</div><div><div class="step-title">Получите результат</div><div class="step-desc">AI проанализирует контент и покажет вероятность AI-генерации</div></div></div>
+      </div>
+      <div class="formats">
+        <div class="formats-title">Поддерживаемые форматы</div>
+        <div class="formats-row">
+          <span class="format-badge">📸 Фото</span>
+          <span class="format-badge">🎬 Reels</span>
+          <span class="format-badge">🎠 Карусели</span>
+        </div>
+      </div>
+    </div>
+    <div class="loading-screen" id="loading-view">
+      <button class="new-analysis-btn" id="back-btn-loading" style="margin-bottom:20px;">← Назад</button>
+      <div class="preview-box" id="preview-box"><img id="preview-img" src="" alt="" /><div class="scan-overlay"><div class="scan-line"></div></div></div>
+      <div class="loading-text" id="loading-text">Загрузка поста из Instagram...</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="loading-hint">Это может занять несколько секунд</div>
+    </div>
+    <div class="results-screen" id="results-view">
+      <button class="new-analysis-btn" id="back-btn-results" style="margin-bottom:20px;">← Назад</button>
+      <div class="preview-box" id="result-preview-box" style="margin-bottom:20px;"><img id="result-preview-img" src="" alt="" /></div>
+      <div class="verdict-card" id="verdict-card">
+        <div class="verdict-icon" id="verdict-icon"></div>
+        <div class="verdict-label" id="verdict-label"></div>
+        <div class="verdict-confidence" id="verdict-confidence"></div>
+      </div>
+      <div class="meter-card">
+        <div class="meter-title">Шкала AI-генерации</div>
+        <div class="meter-bar"><div class="meter-fill" id="meter-fill"></div></div>
+        <div class="meter-labels"><span>Реальный</span><span>AI</span></div>
+      </div>
+      <div class="detail-card" id="sightengine-card" style="display:none;">
+        <div class="detail-title">🔬 SightEngine</div>
+        <div class="detail-value" id="sightengine-value"></div>
+      </div>
+      <div class="detail-card" id="claude-card" style="display:none;">
+        <div class="detail-title">🧠 Claude Vision</div>
+        <div class="detail-explanation" id="claude-explanation"></div>
+        <div class="artifacts-list" id="artifacts-list" style="display:none;">
+          <div class="artifacts-title">Обнаруженные артефакты:</div>
+          <div id="artifacts-items"></div>
+        </div>
+      </div>
+      <div class="detail-card" id="post-card" style="display:none;">
+        <div class="detail-title">📝 Информация о посте</div>
+        <div id="post-details"></div>
+      </div>
+      <button class="new-analysis-btn" id="new-analysis-btn">🔍 Проверить другую ссылку</button>
+    </div>
+    <div class="error-screen" id="error-view">
+      <div class="err-icon">⚠️</div>
+      <div class="err-title">Ошибка анализа</div>
+      <div class="err-message" id="err-message"></div>
+      <button class="retry-btn" id="retry-btn">Попробовать снова</button>
+      <br><br>
+      <button class="new-analysis-btn" id="back-btn-error">← Назад</button>
+    </div>
+  </div>
+  <script>
+    const API_BASE = '';
+    const INSTAGRAM_RE = /https?:\/\/(www\.)?(instagram\.com|instagr\.am)\/(p|reel|reels)\/[\w-]+/;
+    const $ = id => document.getElementById(id);
+    const urlInput = $('url-input'), pasteBtn = $('paste-btn'), analyzeBtn = $('analyze-btn');
+    const errorText = $('error-text'), homeView = $('home-view'), loadingView = $('loading-view');
+    const resultsView = $('results-view'), errorView = $('error-view');
+
+    function showView(view) {
+      [homeView, loadingView, resultsView, errorView].forEach(v => v.classList.remove('visible'));
+      if (view === loadingView || view === resultsView || view === errorView) {
+        homeView.style.display = 'none'; view.classList.add('visible');
+      } else {
+        homeView.style.display = 'block';
+        loadingView.classList.remove('visible'); resultsView.classList.remove('visible'); errorView.classList.remove('visible');
+      }
+    }
+    function setProgress(pct, text) {
+      $('progress-fill').style.width = pct + '%';
+      if (text) $('loading-text').textContent = text;
+    }
+    pasteBtn.addEventListener('click', async () => {
+      try { const text = await navigator.clipboard.readText(); if (text) { urlInput.value = text; errorText.classList.remove('visible'); } } catch {}
+    });
+    urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') analyzeBtn.click(); });
+    $('back-btn-loading').addEventListener('click', () => showView(homeView));
+    $('back-btn-results').addEventListener('click', () => showView(homeView));
+    $('back-btn-error').addEventListener('click', () => showView(homeView));
+    $('new-analysis-btn').addEventListener('click', () => showView(homeView));
+
+    let currentUrl = '';
+    analyzeBtn.addEventListener('click', () => {
+      const url = urlInput.value.trim();
+      errorText.classList.remove('visible');
+      if (!url) { errorText.textContent = 'Вставьте ссылку на пост из Instagram'; errorText.classList.add('visible'); shake(urlInput); return; }
+      if (!INSTAGRAM_RE.test(url)) { errorText.textContent = 'Неверный формат ссылки'; errorText.classList.add('visible'); shake(urlInput); return; }
+      currentUrl = url; runAnalysis(url);
+    });
+    $('retry-btn').addEventListener('click', () => { if (currentUrl) runAnalysis(currentUrl); });
+
+    async function runAnalysis(url) {
+      showView(loadingView); setProgress(5, 'Загрузка поста из Instagram...'); $('preview-img').src = '';
+      try {
+        setProgress(15, 'Загрузка поста из Instagram...');
+        const postRes = await fetch(API_BASE + '/api/instagram/post', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, shortcode: extractShortcode(url) }),
+        });
+        if (!postRes.ok) { const err = await postRes.json().catch(() => ({})); throw new Error(err.message || 'Не удалось загрузить пост'); }
+        const post = await postRes.json();
+        if (post.thumbnailUrl || post.mediaUrls?.[0]) $('preview-img').src = post.thumbnailUrl || post.mediaUrls[0];
+        setProgress(35, 'Анализ контента с помощью AI...');
+        const mediaUrl = post.mediaUrls?.[0];
+        if (!mediaUrl) throw new Error('Нет медиа для анализа');
+        const analyzeRes = await fetch(API_BASE + '/api/analyze', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mediaUrl, mediaType: post.type === 'video' ? 'video' : 'image' }),
+        });
+        setProgress(80, 'Формирование результата...');
+        if (!analyzeRes.ok) { const err = await analyzeRes.json().catch(() => ({})); throw new Error(err.message || 'Ошибка при анализе'); }
+        const result = await analyzeRes.json();
+        setProgress(100, 'Готово!');
+        await sleep(400); renderResults(result, post);
+      } catch (err) { $('err-message').textContent = err.message || 'Произошла неизвестная ошибка'; showView(errorView); }
+    }
+
+    function renderResults(result, post) {
+      const imgUrl = post.thumbnailUrl || post.mediaUrls?.[0] || '';
+      $('result-preview-img').src = imgUrl;
+      $('result-preview-box').style.display = imgUrl ? 'block' : 'none';
+      const color = getVerdictColor(result.confidence, result.isAI);
+      const label = getVerdictLabel(result.confidence, result.isAI);
+      const card = $('verdict-card');
+      card.style.backgroundColor = result.isAI ? 'rgba(255,107,107,0.1)' : 'rgba(81,207,102,0.1)';
+      card.style.borderColor = color;
+      $('verdict-icon').textContent = result.isAI ? '🤖' : '✅';
+      $('verdict-label').textContent = label;
+      $('verdict-label').style.color = color;
+      $('verdict-confidence').textContent = 'Уверенность: ' + result.confidence + '%';
+      const fill = $('meter-fill'); fill.style.width = result.confidence + '%'; fill.style.backgroundColor = color;
+      const sightengineCard = $('sightengine-card');
+      if (result.sightengineScore !== undefined && result.sightengineScore !== null) {
+        $('sightengine-value').textContent = 'AI вероятность: ' + result.sightengineScore + '%'; sightengineCard.style.display = 'block';
+      } else { sightengineCard.style.display = 'none'; }
+      const claudeCard = $('claude-card');
+      if (result.claudeVerdict) {
+        $('claude-explanation').textContent = result.claudeVerdict.explanation || '';
+        const artifacts = result.claudeVerdict.artifacts || [];
+        const artifactsList = $('artifacts-list'), artifactsItems = $('artifacts-items');
+        artifactsItems.innerHTML = '';
+        if (artifacts.length > 0) {
+          artifacts.forEach(a => { const item = document.createElement('div'); item.className = 'artifact-item'; item.innerHTML = '<span class="bullet">•</span><span class="text">' + escapeHtml(a) + '</span>'; artifactsItems.appendChild(item); });
+          artifactsList.style.display = 'block';
+        } else { artifactsList.style.display = 'none'; }
+        claudeCard.style.display = 'block';
+      } else { claudeCard.style.display = 'none'; }
+      const postCard = $('post-card'), postDetails = $('post-details');
+      postDetails.innerHTML = '';
+      if (post.username) postDetails.innerHTML += '<div class="post-info">Автор: @' + escapeHtml(post.username) + '</div>';
+      const typeLabel = post.type === 'video' ? 'Видео/Reel' : post.type === 'carousel' ? 'Карусель' : 'Фото';
+      postDetails.innerHTML += '<div class="post-info">Тип: ' + typeLabel + '</div>';
+      if (post.caption) { const short = post.caption.length > 200 ? post.caption.slice(0, 200) + '…' : post.caption; postDetails.innerHTML += '<div class="post-caption">' + escapeHtml(short) + '</div>'; }
+      postCard.style.display = 'block';
+      showView(resultsView);
+    }
+
+    function extractShortcode(url) { const m = url.match(/\/(p|reel|reels)\/([\w-]+)/); return m ? m[2] : ''; }
+    function getVerdictLabel(c, ai) { if (!ai) return c >= 80 ? 'Реальный контент' : 'Скорее всего реальный'; if (c >= 90) return 'AI-генерация'; if (c >= 70) return 'Вероятно AI'; return 'Возможно AI'; }
+    function getVerdictColor(c, ai) { if (!ai) return 'var(--real-green)'; if (c >= 70) return 'var(--ai-red)'; return 'var(--uncertain-yellow)'; }
+    function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+    function shake(el) { el.style.animation = 'none'; el.offsetHeight; el.style.animation = 'shake 0.4s ease'; }
+    const shakeStyle = document.createElement('style');
+    shakeStyle.textContent = '@keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }';
+    document.head.appendChild(shakeStyle);
+  </script>
+</body>
+</html>
